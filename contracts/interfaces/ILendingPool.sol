@@ -38,4 +38,5 @@ interface ILendingPool is IERC4626 {
     // --- Flashloan support ---
     function flashloanWithdraw(uint256 amount) external returns (uint256);
     function flashloanReturn(uint256 amount) external;
+    function isFlashloanActive() external view returns (bool);
 }

@@ -1,5 +1,11 @@
 # Capture The Funds - Certora Next-Gen CTF
 
+## About
+
+**Capture-The-Funds** is a Solidity-based Capture-the-Flag (CTF) style security competition, in which you'll compete against other participants to exploit vulnerable DeFi protocols and earn the highest score.
+
+Learn more at [ctf.certora.com](https://ctf.certora.com).
+
 ## Requirements
 
 ### System Requirements

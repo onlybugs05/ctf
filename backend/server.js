@@ -145,7 +145,17 @@ function CompileContracts() {
       output += data.toString();
     });
 
+    // Timeout after 120 seconds
+    const timeoutId = setTimeout(() => {
+      compileProcess.kill();
+      console.log('⚠ Compilation timed out, continuing anyway');
+      resolve();
+    }, 120000);
+
     compileProcess.on('close', (code) => {
+      // Clear the timeout since compilation completed
+      clearTimeout(timeoutId);
+      
       if (code === 0) {
         console.log('✓ Contracts compiled successfully');
         resolve();
@@ -156,13 +166,6 @@ function CompileContracts() {
         resolve();
       }
     });
-
-    // Timeout after 120 seconds
-    setTimeout(() => {
-      compileProcess.kill();
-      console.log('⚠ Compilation timed out, continuing anyway');
-      resolve();
-    }, 120000);
   });
 }
 
@@ -273,9 +276,6 @@ async function waitForConsoleLogs(txHash, maxWaitMs = 5000, stabilityMs = 1000) 
 async function revertState() {
   const ok = await provider.send("evm_revert", [snapshotId]);
   if (!ok) throw new Error("Failed to revert to init snapshot");
-  
-  // Disable interval mining (prevents automatic timestamp increment between blocks)
-  // await provider.send("evm_setIntervalMining", [0]);
   
   // Set the timestamp for the next block to our baseline value
   await provider.send("evm_setNextBlockTimestamp", [baselineTimestamp]);
@@ -1741,6 +1741,8 @@ async function executeReplay(replayData, attacker, res) {
     
     for (let i = 0; i < replayData.attacks.length; i++) {
       const txData = replayData.attacks[i];
+      let automineWasDisabled = false;
+      try {
         console.log(`Processing transaction ${i + 1}/${replayData.attacks.length}:`);
         
         // Get initial block for this attack
@@ -1767,7 +1769,8 @@ async function executeReplay(replayData, attacker, res) {
         
         // ===== TRANSACTION 2: Batch all approvals in one block =====
         await provider.send("evm_setAutomine", [false]);
-        
+        automineWasDisabled = true;
+
         // Approve WETH, USDC, and NISC for the attack contract
         const erc20ABI = ["function approve(address spender, uint256 amount) returns (bool)"];
         const maxApproval = ethers.constants.MaxUint256;
@@ -1810,6 +1813,14 @@ async function executeReplay(replayData, attacker, res) {
         // Check balance after each attack
         const currentBalance = await provider.getBalance(await attacker.getAddress());
         console.log(`Balance after attack ${attackCount}: ${ethers.utils.formatEther(currentBalance)} ETH`);
+      } finally {
+        // Always re-enable automine so a revert (e.g. in tx.wait()) doesn't leave the chain stuck
+        // and cause subsequent replay attempts to hang at deploy()/deployed().
+        if (automineWasDisabled) {
+          await provider.send("evm_setAutomine", [true]);
+          console.log("Automine re-enabled");
+        }
+      }
     }
     
     const attackerAddress = await attacker.getAddress();

@@ -281,12 +281,12 @@ async function main() {
   const LendingManager = await ethers.getContractFactory('LendingManager');
 
   for (let i = 0; i < trioCount; i++) {
-    console.log(`Starting Trio ${i} Setup`);
+    console.log(`Starting Trio ${i+1} Setup`);
     const trio = await lendingFactory.trios(i);
     lendingManagers.push(trio.lendingManager);
     lendingPoolsA.push(trio.poolA);
     lendingPoolsB.push(trio.poolB);
-    console.log(`Lending Trio ${i} - Manager: ${trio.lendingManager}, Pool A: ${trio.poolA}, Pool B: ${trio.poolB}`);
+    console.log(`Lending Trio ${i+1} - Manager: ${trio.lendingManager}, Pool A: ${trio.poolA}, Pool B: ${trio.poolB}`);
 
     const managerAddress = lendingManagers[i];
     const poolAAddress = lendingPoolsA[i];
@@ -297,66 +297,66 @@ async function main() {
     const poolB = LendingPool.attach(poolBAddress);
 
     if (i === AssetType.A) {
-      console.log(`Trio 0: LendingOwner depositing USDC to Pool A...`);
+      console.log(`Trio 1: LendingOwner depositing USDC to Pool A...`);
       tx = await usdc.connect(lendingOwner).approve(poolAAddress, depositAmountUSDC);await tx.wait();
       tx = await usdc.mint(lendingOwner.address, depositAmountUSDC);await tx.wait();
       tx = await poolA.connect(lendingOwner).deposit(depositAmountUSDC, lendingOwner.address);await tx.wait();
   
-      console.log(`Trio 0: LendingOwner depositing WETH to Pool B...`);
+      console.log(`Trio 1: LendingOwner depositing WETH to Pool B...`);
       tx = await weth.connect(lendingOwner).approve(poolBAddress, depositAmountWETH);await tx.wait();
 
       await mintWeth(lendingOwner, depositAmountWETH, weth);
       tx = await poolB.connect(lendingOwner).deposit(depositAmountWETH, lendingOwner.address);await tx.wait();
 
-      console.log(`Trio 0: LendingUser0 depositing USDC to Pool A...`);
-      tx = await usdc.connect(lendingUser0).approve(poolAAddress, depositAmountUSDC);await tx.wait();
-      tx = await usdc.mint(lendingUser0.address, depositAmountUSDC);await tx.wait();
-      tx = await poolA.connect(lendingUser0).deposit(depositAmountUSDC, lendingUser0.address);await tx.wait();
-      
-      console.log(`Trio 0: LendingUser0 locking collateral...`);
-      tx = await poolA.connect(lendingUser0).approve(managerAddress, lockAmountUSDCShares);await tx.wait();
-      tx = await manager.connect(lendingUser0).lockCollateral(AssetType.A, lockAmountUSDCShares);await tx.wait();
-      manager = manager.connect(lendingUser0);
-
-      console.log(`Trio 0: LendingUser0 borrowing WETH...`);
-      tx = await manager.borrow(AssetType.B, borrowAmountWETH);await tx.wait();
-      console.log(`Deposited liquidity and borrowed trio 0`);
-    } else if (i === AssetType.B) {
-      console.log(`Trio 1: LendingOwner depositing USDC to Pool A...`);      
-      tx = await usdc.connect(lendingOwner).approve(poolAAddress, depositAmountUSDC);await tx.wait();
-      tx = await usdc.mint(lendingOwner.address, depositAmountUSDC);await tx.wait();
-      tx = await poolA.connect(lendingOwner).deposit(depositAmountUSDC, lendingOwner.address);await tx.wait();
-    
-      console.log(`Trio 1: LendingOwner depositing NISC to Pool B...`);
-      tx = await nisc.connect(lendingOwner).approve(poolBAddress, depositAmountNISC);await tx.wait();
-      tx = await nisc.mint(lendingOwner.address, depositAmountNISC);await tx.wait();
-      tx = await poolB.connect(lendingOwner).deposit(depositAmountNISC, lendingOwner.address);await tx.wait();
-    
       console.log(`Trio 1: LendingUser0 depositing USDC to Pool A...`);
       tx = await usdc.connect(lendingUser0).approve(poolAAddress, depositAmountUSDC);await tx.wait();
       tx = await usdc.mint(lendingUser0.address, depositAmountUSDC);await tx.wait();
       tx = await poolA.connect(lendingUser0).deposit(depositAmountUSDC, lendingUser0.address);await tx.wait();
-
+      
       console.log(`Trio 1: LendingUser0 locking collateral...`);
       tx = await poolA.connect(lendingUser0).approve(managerAddress, lockAmountUSDCShares);await tx.wait();
       tx = await manager.connect(lendingUser0).lockCollateral(AssetType.A, lockAmountUSDCShares);await tx.wait();
       manager = manager.connect(lendingUser0);
 
-      console.log(`Trio 1: LendingUser0 borrowing NISC...`);
+      console.log(`Trio 1: LendingUser0 borrowing WETH...`);
+      tx = await manager.borrow(AssetType.B, borrowAmountWETH);await tx.wait();
+      console.log(`Deposited liquidity and borrowed trio 1`);
+    } else if (i === AssetType.B) {
+      console.log(`Trio 2: LendingOwner depositing USDC to Pool A...`);      
+      tx = await usdc.connect(lendingOwner).approve(poolAAddress, depositAmountUSDC);await tx.wait();
+      tx = await usdc.mint(lendingOwner.address, depositAmountUSDC);await tx.wait();
+      tx = await poolA.connect(lendingOwner).deposit(depositAmountUSDC, lendingOwner.address);await tx.wait();
+    
+      console.log(`Trio 2: LendingOwner depositing NISC to Pool B...`);
+      tx = await nisc.connect(lendingOwner).approve(poolBAddress, depositAmountNISC);await tx.wait();
+      tx = await nisc.mint(lendingOwner.address, depositAmountNISC);await tx.wait();
+      tx = await poolB.connect(lendingOwner).deposit(depositAmountNISC, lendingOwner.address);await tx.wait();
+    
+      console.log(`Trio 2: LendingUser0 depositing USDC to Pool A...`);
+      tx = await usdc.connect(lendingUser0).approve(poolAAddress, depositAmountUSDC);await tx.wait();
+      tx = await usdc.mint(lendingUser0.address, depositAmountUSDC);await tx.wait();
+      tx = await poolA.connect(lendingUser0).deposit(depositAmountUSDC, lendingUser0.address);await tx.wait();
+
+      console.log(`Trio 2: LendingUser0 locking collateral...`);
+      tx = await poolA.connect(lendingUser0).approve(managerAddress, lockAmountUSDCShares);await tx.wait();
+      tx = await manager.connect(lendingUser0).lockCollateral(AssetType.A, lockAmountUSDCShares);await tx.wait();
+      manager = manager.connect(lendingUser0);
+
+      console.log(`Trio 2: LendingUser0 borrowing NISC...`);
       tx = await manager.borrow(AssetType.B, borrowAmountNISC);await tx.wait();
 
-      console.log(`Trio 1: LendingUser1 depositing NISC to Pool B...`);
+      console.log(`Trio 2: LendingUser1 depositing NISC to Pool B...`);
       tx = await nisc.connect(lendingUser1).approve(poolBAddress, depositAmountNISC);await tx.wait();
       tx = await nisc.mint(lendingUser1.address, depositAmountNISC);await tx.wait();
       tx = await poolB.connect(lendingUser1).deposit(depositAmountNISC, lendingUser1.address);await tx.wait();
 
-      console.log(`Trio 1: LendingUser1 locking collateral...`);
+      console.log(`Trio 2: LendingUser1 locking collateral...`);
       tx = await poolB.connect(lendingUser1).approve(managerAddress, lockAmountNISCShares);await tx.wait();
       tx = await manager.connect(lendingUser1).lockCollateral(1, lockAmountNISCShares);await tx.wait();
       
-      console.log(`Trio 1: LendingUser1 borrowing USDC...`);
+      console.log(`Trio 2: LendingUser1 borrowing USDC...`);
       tx = await manager.connect(lendingUser1).borrow(0, borrowAmountUSDC);await tx.wait();
-      console.log(`Deposited liquidity and borrowed trio 1`);
+      console.log(`Deposited liquidity and borrowed trio 2`);
     }
   }
 
@@ -451,7 +451,7 @@ async function main() {
 
 
   console.log('Creating Auctions...');
-  await advanceTime(5 * 3600);
+  await advanceTime(4 * 3600);
 
   tx = await lottery.connect(ticketBuyer0).approve(auctionManager.address, 0);await tx.wait();
   tx = await lottery.connect(ticketBuyer1).approve(auctionManager.address, 1);await tx.wait();
@@ -470,19 +470,21 @@ async function main() {
   tx = await auctionManager.connect(ticketBuyer1).createDutchAuction(
     lottery.address,
     1, // ticket ID
-    ethers.utils.parseUnits('1000000', 18),
+    ethers.utils.parseUnits('2000000', 18),
     ethers.utils.parseUnits('250000', 18),
     nisc.address,
-    1 * 24 * 3600
+    10 * 24 * 3600
   );await tx.wait();
+  console.log('Creating Auctions...');
+  await advanceTime(1 * 3600);
 
   tx = await auctionManager.connect(ticketBuyer2).createDutchAuction(
     lottery.address,
     2, // ticket ID
-    ethers.utils.parseUnits('800000', 18),
+    ethers.utils.parseUnits('2000000', 18),
     ethers.utils.parseUnits('200000', 18),
     nisc.address,
-    2 * 24 * 3600
+    5 * 24 * 3600
   );await tx.wait();
 
 

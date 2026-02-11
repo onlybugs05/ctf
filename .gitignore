@@ -1,0 +1,10 @@
+out/
+cache/
+artifacts/
+deployed.json
+public/default.sol
+backend/node_modules/*
+node_modules/*
+.DS_Store
+public/eventsABI.json
+

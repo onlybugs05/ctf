@@ -33,11 +33,7 @@ interface ICommunityInsurance is IERC20 {
     function deposit(uint256[] calldata amounts) external;
     function requestWithdraw(uint256 shares) external;
     function completeWithdraw() external;
-
-    // Events
-    event Deposit(address indexed user, uint256 shares);
-    event WithdrawRequested(address indexed user, uint256 totalLocked);
-    event WithdrawCompleted(address indexed user, uint256 shares);
-    event LiquidateA(ILendingManager indexed manager, address indexed user, uint256 collateralShares, uint256 amountReceived);
-    event LiquidateB(ILendingManager indexed manager, address indexed user, uint256 collateralShares, uint256 amountReceived);
+    function liquidateBadDebt(ILendingManager manager, address user, ILendingManager.AssetType assetType) 
+        external 
+        returns (uint256 collateralShares, uint256 receivedAmount);
 }

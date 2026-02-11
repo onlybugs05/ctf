@@ -70,23 +70,23 @@ contract CommunityInsurance is ERC20, ICommunityInsurance {
     function deposit(uint256[] calldata amounts) external {
         uint256 n = supportedAssets.length;
         require(amounts.length == n, "Bad length");
-        for (uint256 i = 0; i < n; i++) {
-            IERC20 asset = supportedAssets[i];
-            asset.safeTransferFrom(msg.sender, address(this), amounts[i]);
-            internalBalance[asset] += amounts[i];
-        }
         uint256 supply = totalSupply();
+        uint256[] memory preBal = totalAssets();
         uint256 mintShares;
-        uint256[] memory bal = totalAssets();
         if (supply == 0) {
             mintShares = 1e18;
         } else {
             for (uint256 i = 0; i < n; i++) {
-                require(bal[i] > 0, "Zero pool balance");
-                uint256 candidate = (amounts[i] * supply) / bal[i];
+                require(preBal[i] > 0, "Zero pool balance");
+                uint256 candidate = (amounts[i] * supply) / preBal[i];
                 if (i == 0) mintShares = candidate;
                 else require(candidate == mintShares, "Unequal ratio");
             }
+        }
+        for (uint256 i = 0; i < n; i++) {
+            IERC20 asset = supportedAssets[i];
+            asset.safeTransferFrom(msg.sender, address(this), amounts[i]);
+            internalBalance[asset] += amounts[i];
         }
         _mint(msg.sender, mintShares);
     }

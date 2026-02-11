@@ -2,7 +2,6 @@
 pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
-import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
@@ -16,7 +15,6 @@ import "../interfaces/IInvestmentVault.sol";
 /// Market additions, removals, and limit updates require a time delay.
 contract InvestmentVault is 
     ERC4626, 
-    ERC20Permit, 
     Ownable, 
     ReentrancyGuard,
     IInvestmentVault
@@ -82,7 +80,6 @@ contract InvestmentVault is
     )
         ERC4626(_asset)
         ERC20(_name, _symbol)
-        ERC20Permit(_name)
         Ownable(_owner)
     {
         require(address(_asset) != address(0), "Zero asset address");
@@ -274,7 +271,7 @@ contract InvestmentVault is
                 if (toDeposit > 0){
                     // Check allocation cap if set.
                     MarketInfo memory info = marketInfo[alloc.market];
-                    require(info.cap == 0 || currentAssets + toDeposit <= info.cap, "Cap exceeded");
+                    require(currentAssets + toDeposit <= info.cap, "Cap exceeded");
                     alloc.market.deposit(toDeposit, address(this));
                     totalDeposited += toDeposit;
                     emit MarketReallocatedDeposit(alloc.market, toDeposit);
@@ -290,7 +287,7 @@ contract InvestmentVault is
                 uint256 toDeposit = alloc.assets - currentAssets;
                 // Check allocation cap if set.
                 MarketInfo memory info = marketInfo[alloc.market];
-                require(info.cap == 0 || alloc.assets <= info.cap, "Cap exceeded");
+                require(alloc.assets <= info.cap, "Cap exceeded");
                 alloc.market.deposit(toDeposit, address(this));
                 totalDeposited += toDeposit;
                 emit MarketReallocatedDeposit(alloc.market, toDeposit);
@@ -400,8 +397,8 @@ contract InvestmentVault is
     /// @notice Withdraws the requested asset amount from the markets.
     function _withdrawFunds(uint256 assets) internal {
         uint256 remaining = assets;
-        for (uint256 i = markets.length-1 ; i >=0 ; i--) {
-            IERC4626 market = markets[i];
+        for (uint256 i = markets.length ; i > 0 ; i--) {
+            IERC4626 market = markets[i-1];
             uint256 available = market.maxWithdraw(address(this));
             uint256 toWithdraw = (available < remaining) ? available : remaining;
             if (toWithdraw > 0) {
@@ -424,7 +421,7 @@ contract InvestmentVault is
     // Overridden Decimals
     // ──────────────────────────────────────────────────────────────
 
-    function decimals() public view override(ERC20, ERC4626, IERC20Metadata) returns (uint8) {
+    function decimals() public view override(ERC4626, IERC20Metadata) returns (uint8) {
         return ERC4626.decimals();
     }
 }

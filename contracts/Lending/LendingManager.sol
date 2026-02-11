@@ -82,6 +82,7 @@ contract LendingManager is Ownable, ReentrancyGuard, ILendingManager {
             collateralField = 0; // inverse of above
             borrowField = 1;
         }
+        require(!pool.isFlashloanActive(), "LendingManager: Pool is in an active flashloan state");
     }
     
     /**

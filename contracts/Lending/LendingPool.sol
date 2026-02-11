@@ -44,7 +44,7 @@ contract LendingPool is ERC4626, ReentrancyGuard, ILendingPool {
     uint256 internal _poolCash;
 
     // Track if a flashloan is currently active to prevent manipulation
-    bool private _flashloanActive;
+    uint256 private flashloanAmount;
 
     modifier onlyFlashloanContract() {
         require(msg.sender == address(flashloanContract), "LendingPool: Caller is not flashloan contract");
@@ -52,7 +52,7 @@ contract LendingPool is ERC4626, ReentrancyGuard, ILendingPool {
     }
 
     modifier notDuringFlashloan() {
-        require(!_flashloanActive, "LendingPool: Operation not allowed during flashloan");
+        require(!isFlashloanActive(), "LendingPool: Operation not allowed during flashloan");
         _;
     }
     modifier onlyLendingManager() {
@@ -92,6 +92,9 @@ contract LendingPool is ERC4626, ReentrancyGuard, ILendingPool {
         _poolCash = 0;
     }
 
+    function isFlashloanActive() public view returns (bool) {
+        return flashloanAmount > 0;
+    }
     function getCash() external view returns (uint256) {
         return _poolCash;
     }
@@ -133,7 +136,7 @@ contract LendingPool is ERC4626, ReentrancyGuard, ILendingPool {
     /**
      * @notice Updates the compounded interest index.
      */
-    function updateIndex() public {
+    function updateIndex() notDuringFlashloan public {
         uint256 timeElapsed = block.timestamp - lastUpdate;
         if (timeElapsed == 0) return;
 
@@ -160,8 +163,9 @@ contract LendingPool is ERC4626, ReentrancyGuard, ILendingPool {
 
     /**
      * @notice Returns the total assets of the pool.
+     * Applies the `notDuringFlashloan` modifier to avoid view reentrancy.
      */
-    function totalAssets() public view override(ERC4626, IERC4626) returns (uint256) {
+    function totalAssets() public view override(ERC4626, IERC4626) notDuringFlashloan returns (uint256) {
         uint256 poolCash = _poolCash;
         uint256 currentDebt = (totalBorrowNormalized * index) / 1e18;
         return poolCash + currentDebt;
@@ -190,7 +194,12 @@ contract LendingPool is ERC4626, ReentrancyGuard, ILendingPool {
         totalBorrowNormalized -= normalizedRepay;
     }
 
-
+    function mint(uint256 shares, address receiver) public override(ERC4626, IERC4626) nonReentrant notDuringFlashloan returns (uint256 assets) {
+        updateIndex();
+        assets = super.mint(shares, receiver);
+        _poolCash += assets;
+        return assets;
+    }
     function deposit(uint256 assets, address receiver) public override(ERC4626, IERC4626) nonReentrant notDuringFlashloan returns (uint256 shares) {
         updateIndex();
         shares = super.deposit(assets, receiver);
@@ -229,7 +238,7 @@ contract LendingPool is ERC4626, ReentrancyGuard, ILendingPool {
      */
     function flashloanWithdraw(uint256 amount) external onlyFlashloanContract nonReentrant returns (uint256) {
         require(amount <= _poolCash, "LendingPool: Not enough cash for flashloan");
-        _flashloanActive = true;  // Mark flashloan as active
+        flashloanAmount += amount;  
         _poolCash -= amount;
         IERC20(asset()).safeTransfer(msg.sender, amount);
         return amount;
@@ -241,6 +250,6 @@ contract LendingPool is ERC4626, ReentrancyGuard, ILendingPool {
      */
     function flashloanReturn(uint256 amount) external onlyFlashloanContract nonReentrant {
         _poolCash += amount;
-        _flashloanActive = false;  // Mark flashloan as complete
+        flashloanAmount -= amount;
     }
 }
