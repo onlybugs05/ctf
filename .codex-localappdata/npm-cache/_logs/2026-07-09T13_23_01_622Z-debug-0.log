@@ -1,0 +1,19 @@
+0 verbose cli C:\Program Files\nodejs\node.exe C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js
+1 info using npm@11.16.0
+2 info using node@v24.18.0
+3 silly config load:file:C:\Program Files\nodejs\node_modules\npm\npmrc
+4 silly config load:file:C:\Users\onlybugs05-h1\Desktop\CaptureTheFunds\.npmrc
+5 silly config load:file:C:\Users\onlybugs05-h1\.npmrc
+6 silly config load:file:C:\Users\onlybugs05-h1\Desktop\CaptureTheFunds\.codex-appdata\npm\etc\npmrc
+7 verbose title npm exec hardhat compile
+8 verbose argv "exec" "--" "hardhat" "compile"
+9 verbose logfile logs-max:10 dir:C:\Users\onlybugs05-h1\Desktop\CaptureTheFunds\.codex-localappdata\npm-cache\_logs\2026-07-09T13_23_01_622Z-
+10 verbose logfile C:\Users\onlybugs05-h1\Desktop\CaptureTheFunds\.codex-localappdata\npm-cache\_logs\2026-07-09T13_23_01_622Z-debug-0.log
+11 silly logfile done cleaning log files
+12 http fetch GET https://registry.npmjs.org/npm attempt 1 failed with EACCES
+13 verbose cwd C:\Users\onlybugs05-h1\Desktop\CaptureTheFunds
+14 verbose os Windows_NT 10.0.26200
+15 verbose node v24.18.0
+16 verbose npm  v11.16.0
+17 verbose exit 0
+18 info ok

@@ -33,15 +33,21 @@ let currentTxHash = null; // Track current transaction
 let userHistory = [];
 let isNormalMode = true; // Track current mode: true = Normal Mode (history recording), false = Exploration Mode (faucet available)
 
+const isWindows = process.platform === 'win32';
+const npxCmd = isWindows ? 'npx.cmd' : 'npx';
+const spawnOptions = (extra = {}) => ({
+  cwd: path.join(__dirname, '..'),
+  stdio: ['ignore', 'pipe', 'pipe'],
+  shell: isWindows,
+  ...extra
+});
+
 // Spawn Hardhat node and capture console output
 function startHardhatNode() {
   return new Promise((resolve, reject) => {
     console.log('Starting Hardhat node...');
     
-    hardhatProcess = spawn('npx', ['hardhat', 'node', '--hostname', '127.0.0.1', '--port', '8545'], {
-      cwd: path.join(__dirname, '..'),
-      stdio: ['ignore', 'pipe', 'pipe']
-    });
+    hardhatProcess = spawn(npxCmd, ['hardhat', 'node', '--hostname', '127.0.0.1', '--port', '8545'], spawnOptions());
 
     let nodeReady = false;
     let outputBuffer = ''; // Buffer to accumulate output across batches
@@ -131,10 +137,7 @@ function CompileContracts() {
   return new Promise((resolve, reject) => {
     console.log('Compiling contracts...');
     
-    const compileProcess = spawn('npx', ['hardhat', 'compile'], {
-      cwd: path.join(__dirname, '..'),
-      stdio: ['ignore', 'pipe', 'pipe']
-    });
+    const compileProcess = spawn(npxCmd, ['hardhat', 'compile'], spawnOptions());
 
     let output = '';
     compileProcess.stdout.on('data', (data) => {
@@ -174,10 +177,7 @@ function runSetupScript() {
   return new Promise((resolve, reject) => {
     console.log('Running setup script...');
     
-    const setupProcess = spawn('npx', ['hardhat', 'run', 'scripts/setupInitialState.js', '--network', 'localhost'], {
-      cwd: path.join(__dirname, '..'),
-      stdio: ['ignore', 'pipe', 'pipe']
-    });
+    const setupProcess = spawn(npxCmd, ['hardhat', 'run', 'scripts/setupInitialState.js', '--network', 'localhost'], spawnOptions());
 
     setupProcess.stdout.on('data', (data) => {
       process.stdout.write(data);
